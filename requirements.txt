@@ -21,7 +21,7 @@ idna==2.6
 itsdangerous==0.24
 Jinja2==2.10
 Mako==1.0.7
-MarkupSafe==1.0
+# MarkupSafe==1.0 (gives error)
 PyJWT==1.5.3
 python-dateutil==2.6.1
 python-dotenv==0.7.1
@@ -38,5 +38,5 @@ Werkzeug==0.14.1
 WTForms==2.1
 
 # requirements for Heroku
-#psycopg2==2.7.3.1
-#gunicorn==19.7.1
+psycopg2==2.7.3.1
+gunicorn==19.7.1

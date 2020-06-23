@@ -1,2 +1,2 @@
-web: flask db upgrade; flask translate compile; gunicorn microblog:app
-worker: rq worker microblog-tasks
+web: flask db upgrade; flask translate compile; gunicorn paradigmchess30:app
+worker: rq worker paradigmchess30-tasks
