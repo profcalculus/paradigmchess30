@@ -1,1 +1,3 @@
 FLASK_APP=paradigmchess30.py
+SECRET_KEY=dc8eac76945c39957b7a4f589896e124b7a800a98a2fd657
+DATABASE_URL=postgresql://charles:pc30@localhost:5432/paradigmchess30
