@@ -1,3 +1,3 @@
-# Welcome to paradigmchess30!
+# Welcome to ParadigmChess30!
 
-This is an example application featured in my [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world). See the tutorial for instructions on how to work with it.
+This is a web application that creates a playing site for ParadigmChess30.
