@@ -9,6 +9,8 @@ from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
+from flask_debugtoolbar import DebugToolbarExtension
+from flask_socketio import SocketIO
 from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
@@ -23,6 +25,8 @@ mail = Mail()
 bootstrap = Bootstrap()
 moment = Moment()
 babel = Babel()
+toolbar = DebugToolbarExtension()
+socketio = SocketIO()
 
 
 def create_app(config_class=Config):
@@ -36,6 +40,9 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     moment.init_app(app)
     babel.init_app(app)
+    toolbar.init_app(app)
+    socketio.init_app(app)
+
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
         if app.config['ELASTICSEARCH_URL'] else None
     app.redis = Redis.from_url(app.config['REDIS_URL'])
@@ -52,6 +59,7 @@ def create_app(config_class=Config):
 
     from app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+
 
     if not app.debug and not app.testing:
         if app.config['MAIL_SERVER']:

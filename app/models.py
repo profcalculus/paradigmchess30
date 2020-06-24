@@ -114,6 +114,8 @@ class User(UserMixin, PaginatedAPIMixin, db.Model):
     notifications = db.relationship('Notification', backref='user',
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
+    white_games = db.relationship('Game', backref='white'), lazy='dynamic')
+    black_games = db.relationship('Game', backref='black'), lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -292,3 +294,27 @@ class Task(db.Model):
     def get_progress(self):
         job = self.get_rq_job()
         return job.meta.get('progress', 0) if job is not None else 100
+
+class Game(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    white_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    black_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    timestamp = db.Column(db.Float, index=True, default=datetime.utcnow)
+    timecontrol = db.Column(db.String(50))
+    pgn = db.Column(db.Text)
+    result = db.Char(2)
+
+    def show_result(self):
+        res = ''
+        if self.result is None:
+            res = 'Unfinished'
+        elif self.result.startswith('W'):
+            res = 'White won'
+        elif self.result.startswith('B'):
+            res = 'Black won'
+        if self.result[2] == 'T':
+            res += ' on time'
+        res += '.'
+        return res
+
+
