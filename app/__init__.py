@@ -11,6 +11,7 @@ from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_socketio import SocketIO
+from flask_cors import CORS
 from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
@@ -26,7 +27,9 @@ bootstrap = Bootstrap()
 moment = Moment()
 babel = Babel()
 toolbar = DebugToolbarExtension()
+logging.getLogger('flask_socketio').level = logging.DEBUG
 socketio = SocketIO()
+
 
 
 def create_app(config_class=Config):
@@ -41,8 +44,9 @@ def create_app(config_class=Config):
     moment.init_app(app)
     babel.init_app(app)
     toolbar.init_app(app)
-    socketio.init_app(app)
-
+    socketio.init_app(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+    CORS(app)
+    logging.getLogger('flask_socketio').level = logging.DEBUG
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
         if app.config['ELASTICSEARCH_URL'] else None
     app.redis = Redis.from_url(app.config['REDIS_URL'])
@@ -59,6 +63,9 @@ def create_app(config_class=Config):
 
     from app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+
+    from app.messages import bp as messages_bp
+    app.register_blueprint(messages_bp, url_prefix='/messages')
 
 
     if not app.debug and not app.testing:

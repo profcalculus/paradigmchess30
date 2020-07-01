@@ -114,9 +114,9 @@ class User(UserMixin, PaginatedAPIMixin, db.Model):
     notifications = db.relationship('Notification', backref='user',
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
-    white_games = db.relationship('Game', backref='white'), lazy='dynamic')
-    black_games = db.relationship('Game', backref='black'), lazy='dynamic')
-
+    games = db.relationship('Game',
+        primaryjoin="or_(User.id==Game.white_id, User.id == Game.black_id)", order_by='Game.timestamp')
+  
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
@@ -200,10 +200,12 @@ class User(UserMixin, PaginatedAPIMixin, db.Model):
             'post_count': self.posts.count(),
             'follower_count': self.followers.count(),
             'followed_count': self.followed.count(),
+            'games_count': self.games.count(),
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
                 'followers': url_for('api.get_followers', id=self.id),
                 'followed': url_for('api.get_followed', id=self.id),
+                'games': url_for('api.get_games', id=self.id),
                 'avatar': self.avatar(128)
             }
         }
@@ -297,24 +299,40 @@ class Task(db.Model):
 
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    white_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
-    black_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
-    timestamp = db.Column(db.Float, index=True, default=datetime.utcnow)
+    white_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False ) 
+    black_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False ) 
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     timecontrol = db.Column(db.String(50))
     pgn = db.Column(db.Text)
-    result = db.Char(2)
+    result = db.String(2)
+    white = db.relationship('User', foreign_keys=[white_id])
+    black = db.relationship('User', foreign_keys=[black_id])
 
-    def show_result(self):
-        res = ''
-        if self.result is None:
-            res = 'Unfinished'
-        elif self.result.startswith('W'):
-            res = 'White won'
-        elif self.result.startswith('B'):
-            res = 'Black won'
-        if self.result[2] == 'T':
-            res += ' on time'
-        res += '.'
+    def to_json(self):
+        return json.dumps( {
+            'white': self.white.username,
+            'white_id': self.white_id,
+            'black' : self.black.username,
+            'black_id': self.black_id,
+            'timestamp':self.timestamp.isoformat(),
+            'timecontrol':self.timecontrol,
+            'pgn':self.pgn,
+            'result':self.result,
+            'summary':self.__repr__()
+        }, default=str)
+
+    def __repr__(self):
+        res = f'{self.white.username}-{self.black.username}'
+        if self.result:
+            r1 = str(self.result)
+            if r1.startswith('W'):
+                res += ' 1-0'
+            elif r1.startswith('='):
+                res += ' \u00BD-\u00BD' # 1/2-1/2
+            elif r1.startswith('B'):
+                res += ' 0-1'
+            if len(r1) > 1 and r1[1] == 'T':
+                res += ' (time)'
         return res
 
 

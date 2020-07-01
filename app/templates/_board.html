@@ -1,0 +1,20 @@
+{# Parameters: board-id cols white black flipped #}
+
+    <div class="container board-container" id="{{board-id}}-container">
+    <div class="col-{{cols}} d-flex 
+    {% if flipped %} flex-column-reverse {%endif} ">
+        <div class="row {{board-id}}-black">
+            <span class="col-4 playername black">{{black}}</span>>
+            <span class="col-4"></span>
+            <span class="col-4 clocktime"></span>
+        </div>
+        <div class="row chessboard" id={{board-id}}>
+            <!-- board goes here -->
+        </div>
+        <div class="row {{board-id}}-white">
+            <span class="col-4 playername white">{{white}}</span>>
+            <span class="col-4"></span>
+            <span class="col-4 clocktime"></span>
+        </div>
+    </div>
+</div>
