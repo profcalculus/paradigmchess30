@@ -1,6 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{super()}} Game Room {% endblock %}
-(% block content %}
-{% with cols=8 %}
-{% include "_board.html" %}
-{% endwith %}
+{% block title %}Welcome to the ParadigmChess30 Game Room.{% endblock %}
+
+{% block content %}
+<!-- Gameroom start -->
+<h3>Game room</h3>
+<!-- <span>board_id={{board_id}}</span>>
+<span>white={{white}}</span>
+<span>black={{black}}</span>
+<span>flipped={{flipped}} -->
+{% include "_board1.html" %}
+<!-- Gameroom end -->
+{% endblock content %}
+{% block localscript %}
+<script>
+    $(function () {
+        var board_id = $('#board_id').val();
+        console.log('Constructing chessboard ' + board_id);
+        Chessboard(board_id);
+        console.log('Chessboard ' + board_id + ' constructed');
+    });
+</script>
+{% endblock localscript %}

@@ -1,20 +1,32 @@
 {# Parameters: board-id cols white black flipped #}
-
-    <div class="container board-container" id="{{board-id}}-container">
+<!-- Board start -->
+<div class="container board-container" id="{{board_id}}-container">
     <div class="col-{{cols}} d-flex 
-    {% if flipped %} flex-column-reverse {%endif} ">
-        <div class="row {{board-id}}-black">
-            <span class="col-4 playername black">{{black}}</span>>
+    {% if flipped %} flex-column-reverse {% endif %} ">
+        <div class="row row-black">
+            <span class="col-4 playername">{{black}}</span>
             <span class="col-4"></span>
             <span class="col-4 clocktime"></span>
         </div>
-        <div class="row chessboard" id={{board-id}}>
+        <div class="row chessboard" id="{{board_id}}">
             <!-- board goes here -->
         </div>
-        <div class="row {{board-id}}-white">
-            <span class="col-4 playername white">{{white}}</span>>
+        <div class="row row-white">
+            <span class="col-4 playername">{{white}}</span>
             <span class="col-4"></span>
             <span class="col-4 clocktime"></span>
         </div>
     </div>
 </div>
+<script>
+    $(function () {
+        Chessboard("{{board_id}}", {
+                pieceTheme: '/static/img/chesspieces/paradigm30/{piece}.png',
+                    {% if flipped %}
+                    orientation: 'black',
+                    {% endif %}
+                });
+        console.log("Chessboard {{board_id}} created");
+    });
+</script>
+<!-- Board end -->

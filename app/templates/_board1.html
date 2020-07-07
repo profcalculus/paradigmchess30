@@ -1,0 +1,31 @@
+<div class="row">
+    <input type="hidden" id="board_id" value="{{board_id}}">
+    <div class="col-{{cols - 1}} board-container">
+        <div id="{{board_id}}"></div>
+    </div>
+
+    <div class="col-1">
+        <div class="d-flex flex-column justify-content-between clock">
+            <div class="d-flex flex-column">
+                <div class="playername">{{black}}</div>
+                <div class="clocktime" id="black-time">15:15</div>
+            </div>
+            <div class="status">White to play</div>
+            <div class="button_container">
+                <button id="btn-adjust" class="btn btn-info" data-toggle="tooltip" title="Adjust the clock">
+                    <i class="fa fa-cog"></i>
+                </button>
+                <button id="btn-draw" class="btn btn-primary" data-toggle="tooltip" title="Draw?" disabled data-toggle="button">
+                    <i class="fa fa-hand-peace-o"></i>
+                </button>
+                <button id="btn-resign" class="btn  btn-dark" data-toggle="tooltip" title="I resign" disabled data-toggle="button">
+                    <i class="fa fa-flag"></i>
+                </button>
+            </div>
+        </div>
+        <div class="d-flex flex-column">
+            <span class="clocktime" id="white-time">15:15</span>
+            <span class="playername">{{white}}<i class="fas fa-play"></i></span>
+        </div>
+    </div>
+</div>

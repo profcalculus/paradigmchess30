@@ -7,7 +7,7 @@ from guess_language import guess_language
 from app import db, socketio
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, \
     MessageForm
-from app.models import User, Post, Message, Notification
+from app.models import User, Post, Message, Notification, Game
 from app.translate import translate
 from app.main import bp
 
@@ -227,3 +227,25 @@ def notifications():
         'data': n.get_data(),
         'timestamp': n.timestamp
     } for n in notifications])
+
+# TBD
+@bp.route('/gameroom/', defaults={'game_id':1})
+@bp.route('/gameroom/<game_id>')
+# @login_required
+def gameroom(game_id=1):
+    game = Game.query.filter_by(id=game_id).first_or_404()
+    white = game.white.username
+    black = game.black.username
+    flipped = current_user.username == white
+    board_id="board_"+str(game_id)
+    return render_template(
+        'gameroom.html', cols=6, white=white, black=black,
+        flipped = (white != 'white'), board_id=board_id) # TBD
+
+@bp.route('/newgame/<white_id>/<black_id>')
+# @login_required
+def newgame(white_id, black_id):
+    game = Game(white_id=white_id, black_id = black_id)
+    db.session.add(game)
+    db.session.commit()
+    return redirect(url_for('gameroom',game_id=game.id))

@@ -4,9 +4,10 @@ Implements a simple messages server.
 """
 from flask import Blueprint, render_template, request, session, url_for, \
     current_app
-from flask_socketio import emit
+from flask_socketio import emit, join_room, leave_room
 from app import socketio
 from app.models import Game
+import json
 
 bp = Blueprint('messages', __name__, static_folder='static',
                template_folder='templates')
