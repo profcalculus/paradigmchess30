@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+    <style>
+        .label-row {
+            text-align: center
+        }
+
+        .board-label {
+            font-size: large;
+            font-weight: bold;
+            padding: 2px;
+            margin: 0;
+        }
+
+        .small-board {
+            width: 20vw;
+            /* margin: 5px; */
+            /* padding: 0px; */
+        }
+    </style>
+</head>
+
+<body>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <script src="../static/js/chess_p30.js"></script>
+    <script src="../static/js/chess_p30_site.js"></script>
+    <script>
+        $(function () {
+            class ChessboardP30 extends Chessboard {
+                constructor(id, game_json) {
+                    super(id)
+                    
+                }
+
+            };
+        });
+    </script>
+</body>
+
+</html>

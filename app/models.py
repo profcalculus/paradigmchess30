@@ -4,13 +4,13 @@ from hashlib import md5
 import json
 import os
 from time import time
+from random import shuffle
 from flask import current_app, url_for
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
-import redis
 import rq
-from app import db, login
+from app import db, login, redis_client
 from app.search import add_to_index, remove_from_index, query_index
 
 
@@ -89,7 +89,7 @@ followers = db.Table(
 
 
 class User(UserMixin, PaginatedAPIMixin, db.Model):
-    __tablename__ = 'users' # Postgres does not like a table called 'user'
+    __tablename__ = 'users'  # Postgres does not like a table called 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
@@ -115,8 +115,8 @@ class User(UserMixin, PaginatedAPIMixin, db.Model):
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
     games = db.relationship('Game',
-        primaryjoin="or_(User.id==Game.white_id, User.id == Game.black_id)", order_by='Game.timestamp')
-  
+                            primaryjoin="or_(User.id==Game.white_id, User.id == Game.black_id)", order_by='Game.timestamp')
+
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
@@ -288,7 +288,7 @@ class Task(db.Model):
 
     def get_rq_job(self):
         try:
-            rq_job = rq.job.Job.fetch(self.id, connection=current_app.redis)
+            rq_job = rq.job.Job.fetch(self.id, connection=redis_client)
         except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
             return None
         return rq_job
@@ -297,29 +297,102 @@ class Task(db.Model):
         job = self.get_rq_job()
         return job.meta.get('progress', 0) if job is not None else 100
 
+
+""" Helpers for the Game class 
+"""
+
+
+def random_fen_key():
+    key = list('bbnnq')
+    shuffle(key)
+    return ''.join(key)
+
+
+""" End helpers for the Game class """
+
+
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    white_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False ) 
-    black_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False ) 
+    white_id = db.Column(db.Integer, db.ForeignKey(
+        'users.id'), index=True, nullable=False)
+    black_id = db.Column(db.Integer, db.ForeignKey(
+        'users.id'), index=True, nullable=False)
+    # Shorthand for initial FEN
+    fen_key = db.Column(db.String(5), default=random_fen_key)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    timecontrol = db.Column(db.String(50))
-    pgn = db.Column(db.Text)
+    timecontrol = db.Column(db.String(50)) 
+    #Time-control encoding is Code:initial_s:inc_s:code eg 'B:300+3' for 5'+ 3s Bronstein delay 
+    _pgn = db.Column("pgn", db.Text)
     result = db.String(2)
     white = db.relationship('User', foreign_keys=[white_id])
     black = db.relationship('User', foreign_keys=[black_id])
 
+    @property
+    def initial_fen(self):
+        """
+        Construct a full FEN string from the 5-character 'fen_key'
+        representing the P30 starting position, eg 'nqbbn'
+        """
+        key = self.fen_key
+        assert len(key) == 5
+        fen = []
+        fen.append('r'+key[:3]+'k'+key[3:]+'r')  # 8th rank
+        fen.append('p'*8)  # 7th rank
+        fen.extend(['8']*4)  # ranks 6-3
+        fen.append('P'*8)  # 2nd rank
+        fen.append(fen[0].upper())  # 1st rank
+        fen = '/'.join(fen)
+        fen += ' w KQkq - 0 1'
+        return fen
+
     def to_json(self):
-        return json.dumps( {
+        return json.dumps({
+            'id': self.id,
             'white': self.white.username,
             'white_id': self.white_id,
-            'black' : self.black.username,
+            'black': self.black.username,
             'black_id': self.black_id,
-            'timestamp':self.timestamp.isoformat(),
-            'timecontrol':self.timecontrol,
-            'pgn':self.pgn,
-            'result':self.result,
-            'summary':self.__repr__()
+            'initial_fen': self.initial_fen,
+            'timestamp': self.timestamp.isoformat(),
+            'timecontrol': self.timecontrol,
+            'pgn': self.pgn,
+            'result': self.result,
+            'summary': self.__repr__()
         }, default=str)
+
+    def _pgn_tags(self):
+        white = self.white.username
+        black = self.black.username
+        fen = self.initial_fen
+        today = self.timestamp.isoformat()
+        timecontrol = self.timecontrol
+        tags = f""" 
+        [Event ?]
+        [Site "ParadigmChess30.com"]
+        [Date "{today}"]
+        [Round ?]
+        [White "{white}"]
+        [Black "{black}"]
+        [Result "*"]
+        [SetUp "1"]
+        [FEN "{fen}"]
+        [TimeControl "{timecontrol}" ]
+        """
+        return tags
+
+    @property
+    def pgn(self):
+        self._pgn = self._pgn or self._pgn_tags()
+        return self._pgn
+
+    @pgn.setter
+    def pgn(self, pgn):
+        self._pgn = pgn
+
+    def append_pgn(self, new_pgn):
+        pgn = self.pgn
+        pgn.append(new_pgn)
+        self.pgn = pgn
 
     def __repr__(self):
         res = f'{self.white.username}-{self.black.username}'
@@ -328,11 +401,9 @@ class Game(db.Model):
             if r1.startswith('W'):
                 res += ' 1-0'
             elif r1.startswith('='):
-                res += ' \u00BD-\u00BD' # 1/2-1/2
+                res += ' \u00BD-\u00BD'  # 1/2-1/2
             elif r1.startswith('B'):
                 res += ' 0-1'
             if len(r1) > 1 and r1[1] == 'T':
                 res += ' (time)'
         return res
-
-

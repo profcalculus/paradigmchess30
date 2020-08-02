@@ -1,21 +1,80 @@
-/* body {
-    display: none;
-} */
+.clock {
+    border: 18px groove gray;
+}
 .clocktime {
     font-family: 'Orbitron', serif;
     font-weight:"bold";
-    font-size: 4em;
-}
-.playername {
-    font-size:4em;
-}
-i.fas {
-    font-size:2em;
+    font-size: 2.5em;
 }
 
-.board-container {
-    outline:3px green dotted;
+.playername {
+    font-size:2em;
+    font-weight:bold;
+    color:green;
+    margin-left:0px;
 }
+
+ .board-container {
+   min-width:400px;
+ }
+
+ .demo-container {
+    outline:3px green dotted;
+    /* min-width:300px;
+    min-height:250px;     */
+ }
+ .demo-label {
+     background-color:gray;
+     text-align:center;
+     font-size:large;
+ }
+
+.pgn-container, .chat-container {
+    height: 35vh;
+    overflow: auto scroll;
+    text-indent: 10px;
+    /* padding:0px 0px 5px 5px;
+    margin::0px 0px 5px 5px; */
+    border:8px gray ridge;
+    background-color: blueviolet;
+}
+.lobby-chat-container {
+    height: 50vh;
+    overflow: auto scroll;
+    text-indent: 10px;
+    /* padding:0px 0px 5px 5px;
+    margin::0px 0px 5px 5px; */
+    border:8px gray ridge;
+}
+
+.player-list-container   {
+    height:45vh;
+    text-indent: 10px;
+    /* padding:0px 0px 5px 5px;
+    margin::0px 0px 5px 5px; */
+    border:8px gray ridge;
+}
+
+.pgn-list {
+    height:35vh;
+}
+#pgn-label {
+    /* position:relative;
+    top:0;
+    left:0; */
+    color:green;
+}
+.pgn-container>li {
+    font-size: 2em;
+    font-family: monospace;
+    list-style-type: none;
+}
+
+.pgn-container>li.tinygreen {
+    color: darkgreen;
+    font-size: 1.5em;
+}
+
 .header {
     text-align: center;
     padding: 3px;
@@ -66,6 +125,11 @@ i.fas {
     height: 30vh;
     overflow:auto scroll;
     text-indent: 10px;
+}
+
+.server-message {
+    color:red;
+    font-style: italic;
 }
 
 .no-bullets {
@@ -171,25 +235,21 @@ footer {
     font-size: small;
 }
 
-span.left-credits {
-    margin-left: 3em;
+span.left-credit {
+    top:99vh;
+    margin-left: 1em;
     text-align: left;
+    font-size: x-small;
+    font-style:italic;
 }
 
 span.filler {
     display: inline-block;
 }
 
-span.right-credits {
-    margin-right: 3em;
+span.right-credit {
+    margin-right: 1em;
     text-align: right;
-}
-.playername {
-    font-size: xx-large;
-    font-weight:bold;
-    color:green;
-}
-.clocktime {
-
-
+    font-size: x-small;
+    font-style:italic;
 }

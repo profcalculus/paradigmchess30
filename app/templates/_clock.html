@@ -1,0 +1,21 @@
+    <div id="clock" class="col-2 d-flex flex-column justify-content-between clock border border-dark">
+        <div class="d-flex flex-column">
+            <span id="black-name" class="playername">{{black}}</span>
+            <span class="clocktime" id="black-time">15:15</span>
+        </div>
+        <div class="btn-group btn-group-vertical well border border-primary rounded-pill">
+            <button id="btn-adjust" class="btn btn-info mb-2" data-toggle="tooltip" title="Adjust the clock">
+                <i class="fa fa-cog"></i>
+            </button>
+            <button id="btn-draw" class="btn btn-primary mb-2" data-toggle="tooltip" title="Draw?" data-toggle="button">
+                <i class="fa fa-hand-peace-o"></i>
+            </button>
+            <button id="btn-resign" class="btn  btn-danger" data-toggle="tooltip" title="I resign" data-toggle="button">
+                <i class="fa fa-flag"></i>
+            </button>
+        </div>
+        <div class="d-flex flex-column">
+            <span class="clocktime" id="white-time">15:15</span>
+            <span class="playername" id="white-name">{{white}}</span>
+        </div>
+    </div>

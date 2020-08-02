@@ -1,0 +1,78 @@
+{% extends "base.html"%}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{url_for('static',filename='css/lobby.css')}}">
+{% endblock styles %}
+
+{% block title%}Paradigm Chess30 Lobby{% endblock title %}
+{% block app_content%}
+<div class="container" style="height:90vh;width:90vw; outline:2px dotted red;">
+    <div class="row">
+        <div class="col-8">
+            <div class="kibitz-container" style="min-width:30%; min-height:80vh; background:lightblue;">
+                <div class="row text-center">
+                    <div class="col-4 demo-container ">
+                        <label class="demo-label">Lorem-Ipsum</label>
+                        <div id="demo-0"></div>
+                    </div>
+                    <div id=" col-4 demo-container ">
+                        <label class="demo-label">Lorem-Ipsum</label>
+                        <div id="demo-1"></div>
+                    </div>
+                    <div id=" col-4 demo-container ">
+                        <label class="demo-label">Lorem-Ipsum</label>
+                        <div id="demo-2"></div>
+                    </div>
+                </div>
+                <div class=" row text-center">
+                    <div class="col-4 demo-container">
+                        <label class="demo-label">Lorem-Ipsum</label>
+                        <div id="demo-3"></div>
+                    </div>
+                    <div id=" col-4 demo-container ">
+                        <label class=" demo-label">Lorem-Ipsum</label>
+                        <div id="demo-4"></div>
+                    </div>
+                    <div id=" col-4 demo-container ">
+                        <label class="demo-label">Lorem-Ipsum</label>
+                        <div id="demo-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class=" col-4 lobby-right-container">
+            <div class="row" id="lobby-chat-panel">
+                <ul id="lobby-chat-list" class="col chat-list">
+                </ul>
+            </div>
+            <div class="row" id="player-list-container">
+                <div class="col player-list-panel">
+                    <ul id="player-list">
+                        {% for player in players %}
+                        <li class="player-name">{{player}}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // jquery is not yet loaded
+    document.onload = function () {
+        // Generate the demo boards
+        const demos = [];
+        for (let i = 0; i < 6; i++) {
+            var demo = new ChessBoard_P30(`demo-{i}`);
+            demos.append(demo);
+            console.log(`demo-{i} created`);
+        };
+        // Connect to websockets
+        if (socket === null) {
+            socket = io();
+        }
+    };
+</script>
+
+{% endblock app_content %}

@@ -8,7 +8,7 @@ def make_shell_context():
     return {'db': db, 'User': User, 'Post': Post, 'Message': Message,
             'Notification': Notification, 'Task': Task, 'Game': Game}
 
-
-cli.register(app)
-app.logger.info('socketio launching')
-socketio.run(app)
+if __name__ == '__main__':
+    cli.register(app)
+    app.logger.info('socketio launching')
+    socketio.run(app)

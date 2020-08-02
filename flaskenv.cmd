@@ -1,5 +1,5 @@
-export FLASK_APP=paradigmchess30.py
-export FLASK_DEBUG=1
-export SECRET_KEY=dc8eac76945c39957b7a4f589896e124b7a800a98a2fd657
-export DATABASE_URL=postgresql://paradigmchess30:pc30@localhost:5432/paradigmchess30
-export FLASK_ENV=development
+unset FLASK_APP
+unset FLASK_DEBUG
+unset FLASK_ENV
+unset SECRET_KEY
+unset DATABASE_URL

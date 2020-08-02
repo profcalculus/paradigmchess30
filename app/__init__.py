@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from typing import Optional
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
@@ -12,8 +14,8 @@ from flask_babel import Babel, lazy_gettext as _l
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask_redis import FlaskRedis
 from elasticsearch import Elasticsearch
-from redis import Redis
 import rq
 from config import Config
 
@@ -29,7 +31,9 @@ babel = Babel()
 toolbar = DebugToolbarExtension()
 logging.getLogger('flask_socketio').level = logging.DEBUG
 socketio = SocketIO()
-
+redis_client = FlaskRedis()
+# NB global app state! TODO: revise this if we need > 1 Flask instance
+games_in_progress = [] # List of game ids
 
 
 def create_app(config_class=Config):
@@ -46,11 +50,11 @@ def create_app(config_class=Config):
     toolbar.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
     CORS(app)
+    redis_client.init_app(app)
     logging.getLogger('flask_socketio').level = logging.DEBUG
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
         if app.config['ELASTICSEARCH_URL'] else None
-    app.redis = Redis.from_url(app.config['REDIS_URL'])
-    app.task_queue = rq.Queue('paradigmchess30-tasks', connection=app.redis)
+    app.task_queue = rq.Queue('paradigmchess30-tasks', connection=redis_client)
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
@@ -87,7 +91,7 @@ def create_app(config_class=Config):
 
         if app.config['LOG_TO_STDOUT']:
             stream_handler = logging.StreamHandler()
-            stream_handler.setLevel(logging.INFO)
+            stream_handler.setLevel(app.config('LOG_LEVEL'))
             app.logger.addHandler(stream_handler)
         else:
             if not os.path.exists('logs'):
@@ -97,10 +101,10 @@ def create_app(config_class=Config):
             file_handler.setFormatter(logging.Formatter(
                 '%(asctime)s %(levelname)s: %(message)s '
                 '[in %(pathname)s:%(lineno)d]'))
-            file_handler.setLevel(logging.INFO)
+            file_handler.setLevel(app.config('LOG_LEVEL'))
             app.logger.addHandler(file_handler)
 
-        app.logger.setLevel(logging.INFO)
+        app.logger.setLevel(app.config('LOG_LEVEL'))
         app.logger.info('paradigmchess30 startup')
 
     return app

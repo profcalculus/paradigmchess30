@@ -1,0 +1,28 @@
+{
+  "name": "paradigmchess30",
+  "version": "1.0.0",
+  "description": "This is a web application that creates a playing site for ParadigmChess30.",
+  "main": "index.js",
+  "directories": {
+   "test": "jstests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/profcalculus/paradigmchess30.git"
+  },
+  "keywords": [
+    "chess",
+    "paradigm30",
+    "flask",
+    "socketio"
+  ],
+  "author": "ProfCalculus",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/profcalculus/paradigmchess30/issues"
+  },
+  "homepage": "https://github.com/profcalculus/paradigmchess30#readme"
+}

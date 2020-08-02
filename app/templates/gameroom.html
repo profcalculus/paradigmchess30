@@ -1,23 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Welcome to the ParadigmChess30 Game Room.{% endblock %}
 
-{% block content %}
+{% block app_content %}
 <!-- Gameroom start -->
 <h3>Game room</h3>
-<!-- <span>board_id={{board_id}}</span>>
-<span>white={{white}}</span>
-<span>black={{black}}</span>
-<span>flipped={{flipped}} -->
-{% include "_board1.html" %}
+<div class="row">
+    <div class="col-6" style="outline: 3px dotted red;">
+        <div class="row">
+            {% include "_board1.html" %}
+            {% include "_clock.html" %}
+        </div>
+    </div>
+    <div class="col-6" style="outline: 3px dashed red;padding:0px;">
+        {% include "_chat.html" %}
+        {% include "_pgn.html" %}
+    </div>
+</div>
 <!-- Gameroom end -->
-{% endblock content %}
-{% block localscript %}
-<script>
+{% endblock app_content %}
+{# {% block localscript %} #}
+<!--<script>
+    // Create the Chessboard widget
     $(function () {
         var board_id = $('#board_id').val();
-        console.log('Constructing chessboard ' + board_id);
-        Chessboard(board_id);
-        console.log('Chessboard ' + board_id + ' constructed');
+        var fen = $('#fen').val();
+        var orientation = $('#orientation').val();
+        var pgn = $('pgn').val();
+        //TODO: Hardcoded pieceTheme because of hassles unescaping url_for()
+        var pieceTheme = '/static/img/chesspieces/paradigm30/{piece}.png';
+        console.log('Constructing chessboard ' + board_id + ', fen = ' + fen + ', orientation = ' +
+            orientation);
+        var config = {
+            position: fen,
+            orientation: orientation,
+            pieceTheme: pieceTheme,
+        }
+        // alert('config = '+ config.position + ', '+ config.orientation+ ', ' + config.pieceTheme);
+        var board = Chessboard(board_id, config = config);
+        console.log(`Chessboard ${board_id} constructed: PGN is ${pgn}`);
+
+        // add_pgn_line(pgn);
     });
+</script>-->
+{# {% endblock localscript %} #}
+{% block localscript %}
+<script>
+    lost_on_time = function (player) {
+        alert(`${player} has lost on time`);
+    };
+    var user = sessionStorage.get('current_user');
+    $.getJSON(`newgame/$white/$black`, function (result) {
+        var gameJSON = result;
+        var board_id = `board_${gameJSON["id"]}`;
+        var fen = gameJSON['initial_fen'];
+        orientation = ((gameJSON['black'] === user) ? "black" : "white");
+        var board = new Chessboard_P30(board_id, fen, orientation);
+    });
+    var clock = new Clock(
+        mode = 'Bronstein',
+        basetime = 3 * 60,
+        extratime = 10); /// TBD!
+    clock.on_timeloss = lost_on_time();
+    socket.on('message', function (msg) {
+        $('#chatlist').append('<li>' + msg + '</li>');
+    })
 </script>
 {% endblock localscript %}

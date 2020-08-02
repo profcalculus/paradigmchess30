@@ -1,17 +1,17 @@
 from datetime import datetime
+from json import dumps
 from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
-from app import db, socketio
+from app import db, socketio, redis_client
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, \
     MessageForm
 from app.models import User, Post, Message, Notification, Game
 from app.translate import translate
 from app.main import bp
-
-
+from app.globals import ONLINE_USERS, OnlineUser, Challenge 
 
 
 @bp.before_app_request
@@ -23,9 +23,9 @@ def before_request():
     g.locale = str(get_locale())
 
 
-@bp.route('/', methods=['GET', 'POST'])
-@bp.route('/index', methods=['GET', 'POST'])
-@login_required
+# @bp.route('/', methods=['GET', 'POST'])
+# @bp.route('/index', methods=['GET', 'POST'])
+# @login_required
 def index():
     form = PostForm()
     if form.validate_on_submit():
@@ -48,7 +48,6 @@ def index():
     return render_template('index.html', title=_('Home'), form=form,
                            posts=posts.items, next_url=next_url,
                            prev_url=prev_url)
-
 
 @bp.route('/explore')
 @login_required
@@ -87,7 +86,6 @@ def user_popup(username):
     user = User.query.filter_by(username=username).first_or_404()
     form = EmptyForm()
     return render_template('user_popup.html', user=user, form=form)
-
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -229,23 +227,45 @@ def notifications():
     } for n in notifications])
 
 # TBD
-@bp.route('/gameroom/', defaults={'game_id':1})
+
+
+# @bp.route('/gameroom/', defaults={'game_id': 1})
 @bp.route('/gameroom/<game_id>')
 # @login_required
-def gameroom(game_id=1):
+def gameroom(game_id):
     game = Game.query.filter_by(id=game_id).first_or_404()
-    white = game.white.username
-    black = game.black.username
-    flipped = current_user.username == white
-    board_id="board_"+str(game_id)
+    orientation = 'white'
+    if (current_user.is_authenticated and current_user.username == game.black.username):
+        orientation = 'black'
     return render_template(
-        'gameroom.html', cols=6, white=white, black=black,
-        flipped = (white != 'white'), board_id=board_id) # TBD
+        'gameroom.html', board_id='board_' + str(game.id),
+        orientation=orientation, fen=game.initial_fen, 
+        white=game.white.username, black=game.black.username, pgn=game.pgn)  # TBD
+    #TODO: review this for games in progress
 
-@bp.route('/newgame/<white_id>/<black_id>')
+
+
+@bp.route('/newgame/<white_id>/<black_id>/timecontrol')
+@bp.route('/newgame/<white_id>/<black_id>/timecontrol/fen_key')
 # @login_required
-def newgame(white_id, black_id):
-    game = Game(white_id=white_id, black_id = black_id)
+def newgame(white_id, black_id, timecontrol, fen_key=None):
+    game = Game(white_id=white_id, black_id=black_id, fen_key=fen_key)
     db.session.add(game)
     db.session.commit()
-    return redirect(url_for('gameroom',game_id=game.id))
+    print(f'Created new game with id={game.id}')
+    socketio.emit('game',game.to_json())
+    ONLINE_USERS.move(user_name=current_user.username, 
+        game_id=game.id, 
+        colour = 'white' if current_user.id == game.white_id else 'black')
+    return redirect(url_for('main.gameroom', game_id=game.id))
+
+@bp.route('/')
+@bp.route('/index')
+@bp.route('/lobby')
+@login_required
+def lobby():
+    username = current_user.username
+    ONLINE_USERS.move(username,None) #This user no longer has a game in progress
+    socketio.emit('chat', {'from':'ParadigmChess30', 'to': None, 'text':f"{username} has entered the lobby"})
+    return render_template('lobby.html')
+    

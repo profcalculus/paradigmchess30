@@ -1,11 +1,12 @@
 from flask_socketio import emit, send, join_room, leave_room
-from app import socketio
+from app import socketio, logger
 from app.models import Game
+import json
 
 # Message types: 
 # "game" (incoming) - moves, game results, clock setup
 #        (outgoing) - moves, game results, clock setup
-# "pairing" (incoming) - challenges, acceptance/rejection
+# "challenge" (incoming) - challenges, acceptance/rejection
 # "info" (outgoing)  - join/leave, broadcasts
 # "chat" (incoming/outgoing)
 # game {
@@ -18,7 +19,7 @@ from app.models import Game
     # }
     # OR
     # message_type: 'clock'
-    # {style: 'Bronstein'
+    # {mode: 'Bronstein'
     # base_time: '900'
     # delta: '15'}
     # OR
@@ -27,11 +28,17 @@ from app.models import Game
     #     result: '1-0 (time)'
     # }
 # }
-# "pairing"
-# {challenge:
-# {target:'jack'
-# clock_setup or None
-# player or None}}
+# "challenge"
+# {
+# player1:player_id_1
+# player2:player_id_2
+# white: id or None 
+# clock:{
+# mode:'S|B|F'}
+# main_time:int
+# delta:in
+# accepted: true of false or None 
+# }}
 #
 #"info"{
 # message}
@@ -40,22 +47,44 @@ from app.models import Game
 # message (to be routed appropriately)
 # }
 #
-    
 
-@socketio.on('move', namespace='/chess')
+def challenge(target_id, clock, white=None):
+    socketio.emit('challenge',{
+        player1:current_user.id,
+        player2:target_id,
+        clock: json.dumps(clock),
+        white: white,}
+    ) 
+
+
+def challenge_response(target_id):
+    socketio.emit('challenge_response',{
+        player1:target_id,
+        player2:current_user.id,}
+    ) 
+
+
+@socketio.on('move')
 def on_move(data):
-    room = data['room']
-    for room_ in [room, 'lobby']:
-        emit('move', data, room=room_) # Inform the opponent and spectators
-    # TODO: persist move-by-move?
+    # room = data['room']
+    logger.debug('move:' + data)
+    # for room_ in [room, 'lobby']:
+    #     emit('chess', data, room=room_) # Inform the opponent and spectators
+    # # TODO: persist move-by-move?
     # username = data['username']
     # movenumber = data['movenumber']
     # move = data['move']
     # clock = data['clock']
 
+@socketio.on('game_over')
 def on_game_over(data):
-    username = data['username']
-    game = None
-    # game, player = Game.find(username) TODO
+    logger.debug('game_over:' + data)
+    white = data['white_id']
+    black = data['black_id']
+    game = Game.query().filter(white_id=white_id, black_id=black_id).order_by(timestamp).last()
     game.pgn = data['pgn']
-    emit('info', game.get_data())
+    game.result = data['result']
+    current_app.session.commit()
+    # Update demo boards & ....
+    socketio.emit('game_over', data)
+    

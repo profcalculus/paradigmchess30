@@ -1,3 +1,4 @@
+import json
 from flask import render_template, redirect, url_for, flash, request
 from werkzeug.urls import url_parse
 from flask_login import login_user, logout_user, current_user
@@ -8,12 +9,13 @@ from app.auth.forms import LoginForm, RegistrationForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User
 from app.auth.email import send_password_reset_email
+from app.globals import OnlineUser, ONLINE_USERS
 
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.lobby'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -21,18 +23,21 @@ def login():
             flash(_('Invalid username or password'))
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
+        ONLINE_USERS.add(OnlineUser(user['id'], user['username']))
+        session.clear()
+        session['user_id'] = user['id']
+        session['username'] = user['username'] 
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('main.index')
-        return redirect(next_page)
+            next_page = url_for('main.lobby')
+            return redirect(next_page)
     return render_template('auth/login.html', title=_('Sign In'), form=form)
-
 
 @bp.route('/logout')
 def logout():
+    ONLINE_USERS.remove(current_user.username)
     logout_user()
-    return redirect(url_for('main.index'))
-
+    return redirect(url_for('auth.login'))
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
