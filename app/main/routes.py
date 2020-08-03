@@ -268,4 +268,7 @@ def lobby():
     ONLINE_USERS.move(username,None) #This user no longer has a game in progress
     socketio.emit('chat', {'from':'ParadigmChess30', 'to': None, 'text':f"{username} has entered the lobby"})
     return render_template('lobby.html')
-    
+
+@bp.route('/modal')
+def modaldialog():
+    return render_template('modaldialog.html')

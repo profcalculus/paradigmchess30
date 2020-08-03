@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Challenge</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        table {
+            font-size: 1em;
+        }
+
+        .ui-draggable,
+        .ui-droppable {
+            background-position: top;
+        }
+
+        label,
+        input {
+            display: block;
+        }
+
+        input.text {
+            margin-bottom: 12px;
+            width: 95%;
+            padding: .4em;
+        }
+
+        fieldset {
+            padding: 0;
+            border: 0;
+            margin-top: 25px;
+        }
+
+        h1 {
+            font-size: 1.2em;
+            margin: .6em 0;
+        }
+
+        div#users-contain {
+            width: 350px;
+            margin: 20px 0;
+        }
+
+        div#users-contain table {
+            margin: 1em 0;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        div#users-contain table td,
+        div#users-contain table th {
+            border: 1px solid #eee;
+            padding: .6em 10px;
+            text-align: left;
+        }
+
+        .ui-dialog .ui-state-error {
+            padding: .3em;
+        }
+
+        .validateTips {
+            border: 1px solid transparent;
+            padding: 0.3em;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+        $(function () {
+            var dialog, form,
+                $timecontrol = $("#timecontrol"),
+                $basetime = $("#basetime"),
+                $extratime = $("#extratime"),
+                allFields = $([]).add($timecontrol).add($basetime).add($extratime),
+
+                dialog = $("#dialog-form").dialog({
+                    autoOpen: false,
+                    height: 400,
+                    width: 350,
+                    modal: true,
+                    buttons: {
+                        Cancel: function () {
+                            dialog.dialog("close");
+                        }
+                    },
+                    close: function () {
+                        form[0].reset();
+                        allFields.removeClass("ui-state-error");
+                    }
+                });
+
+            form = dialog.find("form").on("submit", function (event) {
+                event.preventDefault();
+                let challenge = new Challenge(
+                    white, black, initial_fen, time_control, challenger);
+                challenge.accepted = true;
+                console.log({
+                    'message': 'challenge',
+                    'challenge': challenge
+                })
+                //socketio.emit('challenge', challenge);
+                dialog.dialog("close");
+            });
+
+            openDialog = function () {
+                dialog.open();
+            }
+
+            let initDropDowns = function () {
+                const perms = ['NDQDN', 'NDQND', 'QDDNN', 'DNDNQ', 'DNNQD', 'NDDQN',
+                    'QNDND', 'DDNQN', 'QDNND', 'NQNDD', 'DNQND', 'DQDNN',
+                    'NNDQD', 'QDNDN', 'QNDDN', 'NNDDQ', 'NNQDD', 'NQDND',
+                    'NDNQD', 'NQDDN', 'QNNDD', 'DNQDN', 'DQNDN', 'NDDNQ',
+                    'DDNNQ', 'DQNND', 'NDNDQ', 'DDQNN', 'DNNDQ', 'DNDQN'
+                ];
+                let $fen = $('#fen');
+                perms.forEach((el, index) => {
+                    let label = (index == 0) ?
+                        ' 0. Standard' :
+                        `${index.toString().padStart(2,' ')}. R${el.slice(0,3)}K${el.slice(3)}R`;
+                    $fen.append(`<option value="${el}">${label}</option>`);
+                });
+            }();
+            let basetime_spinner = $("#basetime").spinner({
+                min: 60,
+                max: 9000,
+                start: 300
+            });
+            let extratime_spinner = $("#extratime").spinner({
+                min: 0,
+                max: 60,
+                start: 0
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <div id="dialog-form" title="Challenge">
+        <form>
+            <fieldset>
+                <label for="opponent">Opponent</label>
+                <input type="text" maxlength=20 name="opponent" id="opponent" value="{{opponent}}"
+                    class="text ui-widget-content ui-corner-all">
+                <label for="fen">Initial position</label>
+                <select name="fen" id="fen" class="text ui-widget-content ui-corner-all">
+                </select>
+                <fieldset>
+                    <label for="timecontrol">Time Control</label>
+                    <select name="timecontrol" id="timecontrol" class="text ui-widget-content ui-corner-all">
+                        <option value="S">Standard</option>
+                        <option value="F">Increment</option>
+                        <option value="B">Delay</option>
+                    </select>
+
+                    <label for="basetime">Base time</label>
+                    <input id="basetime"></input>
+                    <fieldset id="extratime_set">
+                        <label for="extratime">Extra time</label>
+                        <input id="extratime"></input>
+                    </fieldset>
+                </fieldset>
+
+                <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+            </fieldset>
+        </form>
+    </div>
+
+
+    <button id="challenge" onClick="openDialog()">Issue a challenge</button>
+
+
+</body>
+
+</html>

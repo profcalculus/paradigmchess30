@@ -5,9 +5,9 @@ Implements a simple messages server.
 from json import dumps
 from app.globals import Challenge
 from flask import Blueprint, render_template, request, session, url_for, \
-    current_app
+    current_app, session
 from flask_socketio import emit, join_room, leave_room
-from app import socketio, session
+from app import socketio
 from app.models import Game
 
 bp = Blueprint('messages', __name__, static_folder='static',
