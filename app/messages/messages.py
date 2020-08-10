@@ -3,7 +3,7 @@
 Implements a simple messages server.
 """
 from json import dumps
-from app.globals import Challenge
+from app.globals import Challenge, rooms_per_user, users_per_room
 from flask import Blueprint, render_template, request, session, url_for, \
     current_app, session
 from flask_socketio import emit, join_room, leave_room
@@ -23,33 +23,47 @@ def index():
     return render_template('messages/main.html', messages_url=messages_url)
 
 
-@socketio.on('connect', namespace='/messages')
+@socketio.on('connect')
 def on_connect():
     """A new user connects to the messages."""
     if request.args.get('username') is None:
         return False
-    session['username'] = request.args['username']
+    username = request.args['username']
+    session['username'] = username
+    for room in (request.sid,'lobby'):
+        users_per_room[room].append(username)
+        rooms_per_user[username].append(room)
     current_app.logger.info(f"{session['username']} connected")
     emit('message', {'message': session['username'] + ' has joined.'},
          broadcast=True)
 
 
-@socketio.on('disconnect', namespace='/messages')
+@socketio.on('disconnect')
 def on_disconnect():
     """A user disconnected from the messages."""
+    username = session['username']
+    # Remove the user from the g;obal register of rooms & users
+    rooms = rooms_per_user.pop(username)
+    for room in rooms:
+        users_per_room[room].pop(users_per_room[room].index(username))
     current_app.logger.info(f"{session['username']} disconnected")
     emit('message', {'message': session['username'] + ' has left.'},
          broadcast=True)
 
-@socketio.on('join')
-def on_join(data):
+# Joining a socketio room
+def move_to_room(username, room, leave_current_room=True):
     username = data['username']
-    room=data['room']
-    join_room(room)
-    msg = f'{username} has entered {room}'
-    if room != 'lobby':
-        emit('info', dumps({'room':room, 'msg':f'{username} has entered {room}'}))
-    emit('info', dumps({'room':'lobby', 'msg':f'{username} has entered {room}'}))
+    new_room=data['room']
+    join_room(new_room)
+    # Must leave last room...
+
+    last_room = rooms_per_user[username].pop()
+    users_per_room[last_room].pop(users_per_room[last_room].index(username))
+    users_per_room[new_room].append[username]
+    if not new_room in rooms_per_user[username]:
+        rooms_per_user[username].append[new_room]
+    msg = f'{username} has entered {new_room}'
+    emit('info', dumps({'room':'lobby', 'msg':msg}))
         
 
 @socketio.on('leave')

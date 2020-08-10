@@ -49,9 +49,15 @@ class MessageForm(FlaskForm):
     submit = SubmitField(_l('Submit'))
 
 class ChallengeForm(FlaskForm):
-    player = HiddenField()
-    opponent = HiddenField()
+    me = HiddenField()
+    opponent = StringField()
     mode = SelectField(u'Time Control type', coerce=str)
     basetime = IntegerField('Base time')
     extratime = IntegerField('Extra time')
+    def __init__(self, *args, **kwargs):
+        self.opponent = kwargs['opponent']
+        self.mode = kwargs['mode']
+        self.basetime = kwargs['basetime']
+        self.extratime = kwargs['extratime']
+        
 

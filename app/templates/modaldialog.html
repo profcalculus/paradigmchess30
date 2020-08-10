@@ -26,15 +26,20 @@
         }
 
         input.text {
-            margin-bottom: 12px;
+            margin-bottom: 4px;
             width: 95%;
-            padding: .4em;
+            padding: .1em;
+        }
+
+        select {
+            margin:4px 4px; 
         }
 
         fieldset {
             padding: 0;
-            border: 0;
-            margin-top: 25px;
+            margin: 10px;
+            border: 2 px solid black;
+            background-color: lawngreen;
         }
 
         h1 {
@@ -73,20 +78,23 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
         $(function () {
-            var dialog, form,
+            var challenge_dialog, form,
                 $timecontrol = $("#timecontrol"),
                 $basetime = $("#basetime"),
                 $extratime = $("#extratime"),
                 allFields = $([]).add($timecontrol).add($basetime).add($extratime),
 
-                dialog = $("#dialog-form").dialog({
+                challenge_dialog = $("#dialog-form").dialog({
                     autoOpen: false,
                     height: 400,
                     width: 350,
                     modal: true,
                     buttons: {
                         Cancel: function () {
-                            dialog.dialog("close");
+                            challenge_dialog.dialog("close");
+                        },
+                        Challenge: function () {
+                            alert('Challenging!');
                         }
                     },
                     close: function () {
@@ -95,21 +103,23 @@
                     }
                 });
 
-            form = dialog.find("form").on("submit", function (event) {
+            // form = challenge_dialog.find("form").on("submit", function (event) {
+            $('#challenge').on("click", function (event) {
                 event.preventDefault();
                 let challenge = new Challenge(
                     white, black, initial_fen, time_control, challenger);
                 challenge.accepted = true;
+                challenge.target = challenger;
                 console.log({
                     'message': 'challenge',
                     'challenge': challenge
                 })
                 //socketio.emit('challenge', challenge);
-                dialog.dialog("close");
+                challenge_dialog.dialog("close");
             });
 
             openDialog = function () {
-                dialog.open();
+                challenge_dialog.dialog("open");
             }
 
             let initDropDowns = function () {
@@ -130,12 +140,15 @@
             let basetime_spinner = $("#basetime").spinner({
                 min: 60,
                 max: 9000,
-                start: 300
+                start: 300,
+                value: 300
             });
             let extratime_spinner = $("#extratime").spinner({
                 min: 0,
                 max: 60,
-                start: 0
+                start: 0,
+                value: 0,
+                size:5,
             });
         });
     </script>
@@ -159,13 +172,10 @@
                         <option value="F">Increment</option>
                         <option value="B">Delay</option>
                     </select>
-
-                    <label for="basetime">Base time</label>
-                    <input id="basetime"></input>
-                    <fieldset id="extratime_set">
+                        <label for="basetime">Base time</label>
+                        <input id="basetime"></input>
                         <label for="extratime">Extra time</label>
                         <input id="extratime"></input>
-                    </fieldset>
                 </fieldset>
 
                 <!-- Allow form submission with keyboard without duplicating the dialog button -->

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+from collections import defaultdict
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
@@ -32,9 +33,6 @@ toolbar = DebugToolbarExtension()
 logging.getLogger('flask_socketio').level = logging.DEBUG
 socketio = SocketIO()
 redis_client = FlaskRedis()
-# NB global app state! TODO: revise this if we need > 1 Flask instance
-games_in_progress = [] # List of game ids
-
 
 def create_app(config_class=Config):
     app = Flask(__name__)

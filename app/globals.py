@@ -3,6 +3,24 @@ from json import loads, dumps
 from app import redis_client
 from app.models import User
 
+# NB global app state! TODO: review this if we need > 1 Flask instance
+""" Global allocation of rooms to users (many<->many) for socketio """
+def leave_room(user:OnlineUser, room:str) -> None:
+    rooms_for_user = redis_client.hget('rooms_per_user', user.username)
+    users_for_room = redis_client.hget('users_per_room', room)
+    rooms_for_user.pop(rooms_for_user.index(room))
+    users_for_room.pop(users_for_room.index(user.username))
+    redis_client.hset('rooms_per_user',user.username,rooms_for_user)
+    redis_client.hset('users_per_room',room,users_for_room)
+    
+def goto_room(user:OnlineUser, room:str)->None:
+    rooms_for_user = redis_client.hget('rooms_per_user', user.username)
+    users_for_room = redis_client.hget('users_per_room', room)
+    rooms_for_user.append(room)
+    users_for_room.append(user.username)
+    redis_client.hset('rooms_per_user',user.username,rooms_for_user)
+    redis_client.hset('users_per_room',room,users_for_room)
+
 @dataclass
 class OnlineUser:
     id:int

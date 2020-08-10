@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="p30">
+        <h2>{{title}}</h2>
+        <br />
+        <button @click="reverseMessage">Reverse Message</button>
+        <ol>
+            <todo_item v-for="item in grocery_list" v-bind:todo="item" v-bind:key="item.id"></todo_item>
+        </ol>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js">
+    </script>
+    <script>
+        Vue.component("chatbox", {
+            template: '<div><ul>
+            <li v-for="msg in messages">{{msg.sender}} {{msg.text}}</li>
+            </ul><input type="text"><button class="btn btn-block btn-sendchat"></button></div>',
+            props: ['room'],
+            methods: {
+                addMessage:function(sender, text) {
+                    this.messages.append({sender:sender,text:text});
+                },
+                sendMessage:function(text) {
+                    this.messages.append({sender:'Me',text:text});
+                    this.socketio.emit('chat',{sender:currentuser.username,text:text});
+                }
+         
+            }
+        });
+
+        var app = new Vue({
+            el: '#p30',
+            data: {
+                title: "ParadigmChess30 Chat Room"
+                chat_list: [{
+                        sender: 'system',
+                        text: 'Welcome to p30'
+                    },
+                ],
+            },
+            methods: {
+                sendMessage: function () {
+                    this.message = this.message.split('').reverse().join('');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
