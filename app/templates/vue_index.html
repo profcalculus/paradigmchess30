@@ -21,7 +21,7 @@
     <script>
         Vue.component("chatbox", {
             template: '<div><ul>
-            <li v-for="msg in messages">{{msg.sender}} {{msg.text}}</li>
+            <li v-for="msg in messages">{{msg.sender}} : {{msg.text}}</li>
             </ul><input type="text"><button class="btn btn-block btn-sendchat"></button></div>',
             props: ['room'],
             methods: {
