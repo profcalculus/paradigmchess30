@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>Paradigm30</title>
+    <!--base href="./.." /-->
+    <!--link rel="stylesheet" href="css/reset.css"-->
+    <link rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+    <!--link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&display=swap"-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron">
+    <link rel="stylesheet" href="css/chessboard.css">
+    <link rel="stylesheet" href="css/chess_p30.css">
+    <link rel="stylesheet" href="css/clock.css">
+    <!-- Load polyfills to support older browsers -->
+    <script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous">
+    </script>
+    <!-- Load Jquery, JqueryUI,  Popper, Bootstrap, Vue, then BootstrapVue -->
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+    </script>
+
+    <script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+    <!-- Load the following for BootstrapVueIcons support -->
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+
+    <link rel="icon" type="image/png" href="favicon.png">
+</head>
+
+<body>
+    <div class='container-fluid'>
+        <div class="row">
+            <div class="col col-5">
+                <div class="header text-center">Paradigm Chess30</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="m-3 col-5 board-container">
+                <div id="myBoard"></div>
+                <div class="status">
+                    <div id="status" class="text-center"></div>
+                </div>
+            </div>
+            <div class="col-2  align-self-center" id="clock">
+                <!-- Clock settings modal form-->
+                <!--start clock container-->
+                <b-container-fluid mx-1 d.block>
+                    <b-row class="clock">
+                        <b-col>
+                            <b-row>
+                                <b-input v-model='player_black' class="name" placeholder="Black" @change="update_PGN">
+                                </b-input>
+                            </b-row>
+                            <b-row>
+                                <label class="clocktime p-0 ml-4 mr-0"
+                                    :class=timeClass('black')>{{black.maintime|time_display}}
+                                </label>
+                                <b-icon v-if="this.runstate==='black'" class="h2 my-4" icon="gear" animation="spin">
+                                </b-icon>
+                                <b-icon v-if="black.maintime===0" class="h2 my-4 text-danger" icon="flag-fill">
+                                </b-icon>
+                                <b-col col-1>
+                                    <b-row class="justify-content-center">
+                                        <b-button-group class="clock-button-bar">
+                                            <b-button class="m-1 rounded" variant="danger" title="Pause" @click="pause"
+                                                v-if="this.runstate!=='pause'">
+                                                <b-icon icon="pause-fill"></b-icon>
+                                            </b-button>
+                                            <b-button class="m-1 rounded" variant="success" title="Play"
+                                                v-if="this.runstate==='pause'" @click="start(this.toplay)"
+                                                :disabled="this[this.toplay].maintime <= 0">
+                                                <b-icon icon="play-fill"></b-icon>
+                                            </b-button>
+                                            <b-button class="m-1 rounded-pill" variant="warning" title="Reset Clock"
+                                                @click="reset" :disabled="this.runstate !== 'pause'">
+                                                <b-icon icon="arrow-counterclockwise"></b-icon>
+                                            </b-button>
+                                            <b-button class="m-1 pill" @click="newGame" variant="danger"
+                                                title="New game" :disabled="this.runstate !== 'pause'">
+                                                <b-icon icon="shuffle"></b-icon>
+                                            </b-button>
+                                            <b-button class="m-1 rounded-pill" v-b-modal.clock-settings
+                                                variant="primary" title="Settings" :disabled="this.runstate !== 'pause'"
+                                                v-b-popover.hover.topright="clock_settings_popover">
+                                                <b-icon icon="tools"></b-icon>
+                                            </b-button>
+                                            <b-button class="m-1 rounded" variant="danger" title="Takeback"
+                                                @click="takeback" :disabled="this.runstate!=='pause'">
+                                                <b-icon icon="arrow-bar-left"></b-icon>
+                                            </b-button>
+                                        </b-button-group>
+                                    </b-row>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <label class="clocktime p-0 ml-4 mr-0"
+                                    :class=timeClass('white')>{{white.maintime|time_display}}
+                                </label>
+                                <b-icon v-if="this.runstate==='white'" class="h2 my-4" icon="gear" animation="spin">
+                                </b-icon>
+                                <b-icon v-if="white.maintime===0" class="h2 my-4 text-danger" icon="flag-fill">
+                                </b-icon>
+                            </b-row>
+                            <b-row>
+                                <b-input v-model="player_white" class="name" placeholder="White" @change="update_PGN">
+                                </b-input>
+                            </b-row>
+                        </b-col>
+                    </b-row>
+                    </b-container>
+                    <b-modal id=" clock-settings" size="md" title="Clock settings" ok-only @ok="onFormOk"
+                                    @close="onFormCancel">
+                                    <b-form>
+                                        <div class="form-row inline-form">
+                                            <b-form-group id="input-group-1" label="Mode" label-for="mode-select"
+                                                label-cols=4 class="font-weight-bold shadow-lg">
+                                                <b-form-select id="mode-select" v-model="form.mode" :options="modes"
+                                                    cols=6>
+                                                </b-form-select>
+                                            </b-form-group>
+                                        </div>
+                                        <div class="form-row text-center">
+                                            <div class="font-weight-bold">Main time limit</div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="col col-4 text-center">
+                                                <label for="maintime-h">Hours</label>
+                                            </div>
+                                            <div class="col col-4 text-center">
+                                                <label for="maintime-m">Minutes</label>
+                                            </div>
+                                            <div class="col col-4 text-center">
+                                                <label for="maintime-s">Seconds</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="col col-4">
+                                                <b-form-spinbutton id="maintime-h" v-model="form.maintime.h" min="0"
+                                                    max="6">
+                                                </b-form-spinbutton>
+                                            </div>
+
+                                            <div class="col col-4">
+                                                <b-form-spinbutton id="maintime-m" v-model="form.maintime.m" min="0"
+                                                    max="60">
+                                                </b-form-spinbutton>
+                                            </div>
+                                            <div class="col col-4">
+                                                <b-form-spinbutton id="maintime-s" v-model="form.maintime.s" min="0"
+                                                    max="60">
+                                                </b-form-spinbutton>
+                                            </div>
+                                        </div>
+                                        <div class="form-row" v-if="this.form.mode !== 'standard'">
+                                            <b-form-group id="input-group-3" :label="extratime_label"
+                                                class="shadow-lg font-weight-bold">
+                                                <b-form-spinbutton id="extratime" v-model="form.extratime" min="0"
+                                                    max="60">
+                                                </b-form-spinbutton>
+                                            </b-form-group>
+                                        </div>
+                                    </b-form>
+
+                                    <h3 class="my-3 mx-auto bg-info " style="width: auto; text-align:center">
+                                        {{settingsSummary(form.mode, maintime, form.extratime)}}</h3>
+                                    </b-modal>
+                                    <!-- End of clock settings modal form-->
+            </div>
+            <div class="ml-3 col col-4 right-panel">
+
+                <div class="row panel chat scroller">
+                    <div id="chat">Chat</div>
+                </div>
+                <div class="row panel pgn scroller">
+                    <div id="pgn" class='scroll'>
+                        <ul id="pgn-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="row">
+        <span class="col-3 credits left-credits">Game design &copy; by Lourenzo van Niekerk & Craig Willenberg</span>
+        <span class="col-5 filler"></span>
+        <span class="col-3 credits right-credits">Programming &copy; by Charles de Villiers</span>
+    </footer>
+    </div>
+    <!-- Clock settings modal form -->
+    <div>
+        <!-- promotion dialog: not displayed initially-->
+        <div id="promotion-dialog" style="position:absolute; display:none">
+            <ol id="promote-to">
+                <li class="ui-state-default"><span class="piece-name">q</span><img
+                        class="promotion-piece-q promotion-piece" /></li>
+                <li class="ui-state-default"><span class="piece-name">r</span><img
+                        class="promotion-piece-r promotion-piece" /></li>
+                <li class="ui-state-default"><span class="piece-name">n</span><img
+                        class="promotion-piece-n promotion-piece" /></li>
+                <li class="ui-state-default"><span class="piece-name">b</span><img
+                        class="promotion-piece-b promotion-piece" /></li>
+            </ol>
+        </div>
+
+
+        <script src="js/chessboard.js"></script>
+        <script src="js/chess_p30.js"></script>
+        <!-- NOTE: chess_p30 is based on the chess.js library:
+        https://github.com/jhlywa/chess.js-->
+        <script src="js/chess_p30_site.js"></script>
+        <!-- Customizations for the P30 site-->
+        <script src="./js/clock.js"></script>
+        <!-- Clock code depends on Vue & Bootstrap-Vue-->
+
+</body>
+
+</html>

@@ -12,36 +12,52 @@
         <h2>{{title}}</h2>
         <br />
         <chatbox></chatbox>
-     /div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js">
     </script>
     <script>
         Vue.component("chatbox", {
-            template: `<div><ul>
-            <li v-for="msg in messages">{{msg.sender}} : {{msg.text}}</li>
-            </ul><input type="text" v:bind="usermessage"><button @click="sendMessage" class="btn btn-block btn-sendchat"></button></div>`,
-            data: function() {
-                return {messages:[],
-                usermessage:''
+            template: `<div class="chat-container"><label>Chat</label>
+                <ul>
+                 <li v-for="msg in messages">{{msg.sender}}: {{msg.text}}</li>
+               </ul>  
+                 <input type="text" v-model="user_message">
+                 <button @click="send_message" class="btn btn-block"></button>
+             </div>`
+             ,
+             style:{
+                 .chat-container{
+                     width:50vw;
+                     height:30vh;
+                     background-color:lightgrey;
+                 }
+        },
+            data: function () {
+                return {
+                    messages: [],
+                    user_message:'',
                 }
-            }
+            },
             methods: {
-                addMessage:function(sender, text) {
-                    this.messages.append({sender:sender,text:text});
+                add_message: function (message) {
+                    this.messages.push(message);
+                    // alert('messages' + this.messages);
                 },
-                sendMessage:function(text) {
-                    this.messages.append({sender:'Me',text:userMessage});
+                send_message: function () {
+                    this.add_message({
+                        sender: 'Me',
+                        text: this.user_message
+                    });
                     //this.socketio.emit('chat',{sender:currentuser.username,text:userMessage});
-                    this.userMessage = ''; //Clear the input box
+                    this.user_message = ''; //Clear the input box
                 }
-         
             }
         });
 
         var app = new Vue({
             el: '#p30',
             data: {
-                title: "ParadigmChess30 Chat Room",
+                title: "ParadigmChess30",
             },
         });
     </script>

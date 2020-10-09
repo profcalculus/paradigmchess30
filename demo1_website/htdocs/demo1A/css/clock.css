@@ -1,0 +1,30 @@
+.clock {
+    border: 10px ridge burlywood;
+    border-radius: 20px;
+    /* position:relative; */
+    width:20em;
+    height:39vh;
+    /* top: 20vh; */
+    margin-right:5px;
+}
+
+.clocktime {
+    /* position:relative; */
+    width:75%;
+    font-size: 3em;
+    font-family:'Orbitron', serif;
+    font-weight: bold;
+}
+
+.clock-button-bar {
+    border:4px grey groove;
+    border-radius:10px;
+    height:10%;
+    width:95%;
+    background-color: cyan;
+}
+
+.name {
+    font-size: 2em;
+    color:darkblue;
+}
